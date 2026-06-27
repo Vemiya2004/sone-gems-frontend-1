@@ -1,0 +1,1299 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Sone Gems e-commerce API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication
+  - name: gems
+    description: Gem products
+  - name: orders
+    description: Orders
+  - name: banners
+    description: Banners
+  - name: offers
+    description: Offers
+  - name: users
+    description: Users
+  - name: admin
+    description: Admin operations
+  - name: staff
+    description: Staff management
+  - name: revenue
+    description: Revenue analytics
+  - name: analytics
+    description: Sales analytics
+  - name: payment
+    description: Payment processing
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # AUTH
+  /auth/signup:
+    post:
+      operationId: signup
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignupInput"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Bad request
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with username/email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Unauthorized
+
+  /auth/google:
+    post:
+      operationId: googleAuth
+      tags: [auth]
+      summary: Login or register with Google OAuth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoogleAuthInput"
+      responses:
+        "200":
+          description: Logged in via Google
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /auth/admin-login:
+    post:
+      operationId: adminLogin
+      tags: [auth]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Admin logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Unauthorized
+
+  # GEMS
+  /gems:
+    get:
+      operationId: listGems
+      tags: [gems]
+      summary: List all gems with optional filters
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of gems
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GemListResponse"
+    post:
+      operationId: createGem
+      tags: [gems]
+      summary: Create a new gem (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GemInput"
+      responses:
+        "201":
+          description: Gem created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Gem"
+
+  /gems/featured:
+    get:
+      operationId: getFeaturedGems
+      tags: [gems]
+      summary: Get featured gems for homepage
+      responses:
+        "200":
+          description: Featured gems
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Gem"
+
+  /gems/categories:
+    get:
+      operationId: getGemCategories
+      tags: [gems]
+      summary: Get all gem categories with counts
+      responses:
+        "200":
+          description: Gem categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GemCategory"
+
+  /gems/top-selling:
+    get:
+      operationId: getTopSellingGems
+      tags: [gems]
+      summary: Get top selling gems
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Top selling gems
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GemSalesSummary"
+
+  /gems/{id}:
+    get:
+      operationId: getGem
+      tags: [gems]
+      summary: Get a single gem by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Gem details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Gem"
+        "404":
+          description: Not found
+    put:
+      operationId: updateGem
+      tags: [gems]
+      summary: Update a gem (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GemUpdate"
+      responses:
+        "200":
+          description: Updated gem
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Gem"
+    delete:
+      operationId: deleteGem
+      tags: [gems]
+      summary: Delete a gem (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /gems/{id}/related:
+    get:
+      operationId: getRelatedGems
+      tags: [gems]
+      summary: Get related gems for "You may also like"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Related gems
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Gem"
+
+  # ORDERS
+  /orders:
+    get:
+      operationId: listOrders
+      tags: [orders]
+      summary: List orders (admin gets all, user gets their own)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: read
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+    post:
+      operationId: createOrder
+      tags: [orders]
+      summary: Create a new order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderInput"
+      responses:
+        "201":
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  /orders/{id}:
+    get:
+      operationId: getOrder
+      tags: [orders]
+      summary: Get order by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "404":
+          description: Not found
+    put:
+      operationId: updateOrder
+      tags: [orders]
+      summary: Update order status (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderUpdate"
+      responses:
+        "200":
+          description: Updated order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  /orders/{id}/mark-paid:
+    patch:
+      operationId: markOrderPaid
+      tags: [orders]
+      summary: Mark order as paid (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Order marked as paid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  # USERS
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    put:
+      operationId: updateUser
+      tags: [users]
+      summary: Update user profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}/orders:
+    get:
+      operationId: getUserOrders
+      tags: [users]
+      summary: Get orders for a specific user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+
+  # BANNERS
+  /banners:
+    get:
+      operationId: listBanners
+      tags: [banners]
+      summary: List all active banners
+      responses:
+        "200":
+          description: List of banners
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Banner"
+    post:
+      operationId: createBanner
+      tags: [banners]
+      summary: Create a banner (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BannerInput"
+      responses:
+        "201":
+          description: Banner created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Banner"
+
+  /banners/{id}:
+    put:
+      operationId: updateBanner
+      tags: [banners]
+      summary: Update banner
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BannerUpdate"
+      responses:
+        "200":
+          description: Updated banner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Banner"
+    delete:
+      operationId: deleteBanner
+      tags: [banners]
+      summary: Delete banner
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  # OFFERS
+  /offers:
+    get:
+      operationId: listOffers
+      tags: [offers]
+      summary: List all offers
+      responses:
+        "200":
+          description: List of offers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Offer"
+    post:
+      operationId: createOffer
+      tags: [offers]
+      summary: Create an offer (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OfferInput"
+      responses:
+        "201":
+          description: Offer created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Offer"
+
+  /offers/{id}:
+    put:
+      operationId: updateOffer
+      tags: [offers]
+      summary: Update offer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OfferUpdate"
+      responses:
+        "200":
+          description: Updated offer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Offer"
+    delete:
+      operationId: deleteOffer
+      tags: [offers]
+      summary: Delete offer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  # STAFF
+  /staff:
+    get:
+      operationId: listStaff
+      tags: [staff]
+      summary: List all staff (admin only)
+      responses:
+        "200":
+          description: List of staff
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Staff"
+    post:
+      operationId: createStaff
+      tags: [staff]
+      summary: Create staff account (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffInput"
+      responses:
+        "201":
+          description: Staff created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Staff"
+
+  /staff/{id}:
+    put:
+      operationId: updateStaff
+      tags: [staff]
+      summary: Update staff account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffUpdate"
+      responses:
+        "200":
+          description: Updated staff
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Staff"
+    delete:
+      operationId: deleteStaff
+      tags: [staff]
+      summary: Delete staff account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  # REVENUE
+  /revenue:
+    get:
+      operationId: getRevenue
+      tags: [revenue]
+      summary: Get revenue stats with optional date filters
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          schema:
+            type: string
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [today, week, month, year]
+      responses:
+        "200":
+          description: Revenue statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RevenueStats"
+
+  # ANALYTICS
+  /analytics:
+    get:
+      operationId: getAnalytics
+      tags: [analytics]
+      summary: Get analytics data
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [today, week, month, year]
+        - name: startDate
+          in: query
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Analytics data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsData"
+
+  /analytics/dashboard:
+    get:
+      operationId: getDashboardStats
+      tags: [analytics]
+      summary: Get admin dashboard summary stats
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  # PAYMENT
+  /payment/payhere-notify:
+    post:
+      operationId: payhereNotify
+      tags: [payment]
+      summary: PayHere payment notification webhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PayhereNotification"
+      responses:
+        "200":
+          description: Notification received
+
+  /payment/initiate:
+    post:
+      operationId: initiatePayment
+      tags: [payment]
+      summary: Initiate a PayHere payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentInitInput"
+      responses:
+        "200":
+          description: Payment data for PayHere form
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentInitResponse"
+
+  # UPLOAD
+  /upload/image:
+    post:
+      operationId: uploadImage
+      tags: [admin]
+      summary: Upload image(s) for gem or banner
+      responses:
+        "200":
+          description: Uploaded image URLs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadResponse"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    # Auth
+    SignupInput:
+      type: object
+      required: [name, email, username, password]
+      properties:
+        name:      { type: string }
+        email:     { type: string }
+        username:  { type: string }
+        password:  { type: string }
+
+    LoginInput:
+      type: object
+      required: [username, password]
+      properties:
+        username:  { type: string }
+        password:  { type: string }
+
+    GoogleAuthInput:
+      type: object
+      required: [token]
+      properties:
+        token:     { type: string }
+
+    AuthResponse:
+      type: object
+      required: [token, user]
+      properties:
+        token:  { type: string }
+        user:   { $ref: "#/components/schemas/User" }
+
+    # User
+    User:
+      type: object
+      required: [id, name, email, username, role]
+      properties:
+        id:       { type: string }
+        name:     { type: string }
+        email:    { type: string }
+        username: { type: string }
+        role:     { type: string, enum: [customer, admin, staff] }
+        googleId: { type: ["string", "null"] }
+        createdAt: { type: string }
+
+    UserUpdate:
+      type: object
+      properties:
+        name:     { type: string }
+        email:    { type: string }
+        username: { type: string }
+
+    # Gem
+    Gem:
+      type: object
+      required: [id, name, price, category, stock, soldOut]
+      properties:
+        id:          { type: string }
+        name:        { type: string }
+        description: { type: ["string", "null"] }
+        images:
+          type: array
+          items: { type: string }
+        video:       { type: ["string", "null"] }
+        price:       { type: number }
+        discountedPrice: { type: ["number", "null"] }
+        country:     { type: ["string", "null"] }
+        category:    { type: string }
+        weight:      { type: ["string", "null"] }
+        clarity:     { type: ["string", "null"] }
+        size:        { type: ["string", "null"] }
+        colour:      { type: ["string", "null"] }
+        shapeAndCut: { type: ["string", "null"] }
+        treatment:   { type: ["string", "null"] }
+        gemType:     { type: ["string", "null"] }
+        stock:       { type: integer }
+        soldOut:     { type: boolean }
+        isFeatured:  { type: boolean }
+        salesCount:  { type: integer }
+        createdAt:   { type: string }
+
+    GemInput:
+      type: object
+      required: [name, price, category]
+      properties:
+        name:        { type: string }
+        description: { type: string }
+        images:
+          type: array
+          items: { type: string }
+        video:       { type: string }
+        price:       { type: number }
+        country:     { type: string }
+        category:    { type: string }
+        weight:      { type: string }
+        clarity:     { type: string }
+        size:        { type: string }
+        colour:      { type: string }
+        shapeAndCut: { type: string }
+        treatment:   { type: string }
+        gemType:     { type: string }
+        stock:       { type: integer }
+        isFeatured:  { type: boolean }
+
+    GemUpdate:
+      type: object
+      properties:
+        name:        { type: string }
+        description: { type: string }
+        images:
+          type: array
+          items: { type: string }
+        price:       { type: number }
+        country:     { type: string }
+        category:    { type: string }
+        weight:      { type: string }
+        clarity:     { type: string }
+        size:        { type: string }
+        colour:      { type: string }
+        shapeAndCut: { type: string }
+        treatment:   { type: string }
+        gemType:     { type: string }
+        stock:       { type: integer }
+        soldOut:     { type: boolean }
+        isFeatured:  { type: boolean }
+
+    GemListResponse:
+      type: object
+      required: [gems, total, page, totalPages]
+      properties:
+        gems:
+          type: array
+          items: { $ref: "#/components/schemas/Gem" }
+        total:      { type: integer }
+        page:       { type: integer }
+        totalPages: { type: integer }
+
+    GemCategory:
+      type: object
+      required: [name, count]
+      properties:
+        name:  { type: string }
+        count: { type: integer }
+        image: { type: ["string", "null"] }
+
+    GemSalesSummary:
+      type: object
+      required: [id, name, salesCount, revenue]
+      properties:
+        id:         { type: string }
+        name:       { type: string }
+        images:
+          type: array
+          items: { type: string }
+        salesCount: { type: integer }
+        revenue:    { type: number }
+
+    # Order
+    OrderItem:
+      type: object
+      required: [gemId, name, price, quantity]
+      properties:
+        gemId:    { type: string }
+        name:     { type: string }
+        price:    { type: number }
+        quantity: { type: integer }
+        image:    { type: ["string", "null"] }
+
+    ShippingDetails:
+      type: object
+      properties:
+        fullName:       { type: string }
+        address:        { type: string }
+        addressLine2:   { type: ["string", "null"] }
+        email:          { type: string }
+        phone1:         { type: string }
+        phone2:         { type: ["string", "null"] }
+        whatsapp:       { type: ["string", "null"] }
+        city:           { type: string }
+        postalCode:     { type: string }
+        locationLat:    { type: ["number", "null"] }
+        locationLng:    { type: ["number", "null"] }
+
+    Order:
+      type: object
+      required: [id, orderId, userId, items, paymentMethod, pickupType, status, isPaid, total, createdAt]
+      properties:
+        id:              { type: string }
+        orderId:         { type: string }
+        userId:          { type: string }
+        userName:        { type: ["string", "null"] }
+        userEmail:       { type: ["string", "null"] }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/OrderItem" }
+        shippingDetails: { $ref: "#/components/schemas/ShippingDetails" }
+        paymentMethod:   { type: string, enum: [shipping, card] }
+        pickupType:      { type: string, enum: [shipping, pickup] }
+        status:          { type: string, enum: [processing, confirmed, rejected] }
+        isPaid:          { type: boolean }
+        isRead:          { type: boolean }
+        total:           { type: number }
+        shippingCost:    { type: ["number", "null"] }
+        createdAt:       { type: string }
+
+    OrderInput:
+      type: object
+      required: [items, paymentMethod, pickupType, total]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/OrderItem" }
+        shippingDetails: { $ref: "#/components/schemas/ShippingDetails" }
+        paymentMethod:   { type: string, enum: [shipping, card] }
+        pickupType:      { type: string, enum: [shipping, pickup] }
+        total:           { type: number }
+        shippingCost:    { type: number }
+
+    OrderUpdate:
+      type: object
+      properties:
+        status:   { type: string, enum: [processing, confirmed, rejected] }
+        isPaid:   { type: boolean }
+        isRead:   { type: boolean }
+
+    # Banner
+    Banner:
+      type: object
+      required: [id, image, isActive]
+      properties:
+        id:            { type: string }
+        image:         { type: string }
+        expiryDate:    { type: ["string", "null"] }
+        linkedGemId:   { type: ["string", "null"] }
+        linkedCategory: { type: ["string", "null"] }
+        isActive:      { type: boolean }
+        createdAt:     { type: string }
+
+    BannerInput:
+      type: object
+      required: [image]
+      properties:
+        image:          { type: string }
+        expiryDate:     { type: string }
+        linkedGemId:    { type: string }
+        linkedCategory: { type: string }
+
+    BannerUpdate:
+      type: object
+      properties:
+        image:          { type: string }
+        expiryDate:     { type: string }
+        linkedGemId:    { type: string }
+        linkedCategory: { type: string }
+        isActive:       { type: boolean }
+
+    # Offer
+    Offer:
+      type: object
+      required: [id, percentage, isActive]
+      properties:
+        id:         { type: string }
+        percentage: { type: number }
+        gemIds:
+          type: array
+          items: { type: string }
+        categories:
+          type: array
+          items: { type: string }
+        expiryDate: { type: ["string", "null"] }
+        isActive:   { type: boolean }
+        createdAt:  { type: string }
+
+    OfferInput:
+      type: object
+      required: [percentage]
+      properties:
+        percentage: { type: number }
+        gemIds:
+          type: array
+          items: { type: string }
+        categories:
+          type: array
+          items: { type: string }
+        expiryDays: { type: integer }
+
+    OfferUpdate:
+      type: object
+      properties:
+        percentage: { type: number }
+        gemIds:
+          type: array
+          items: { type: string }
+        categories:
+          type: array
+          items: { type: string }
+        expiryDate: { type: string }
+        isActive:   { type: boolean }
+
+    # Staff
+    Staff:
+      type: object
+      required: [id, username, role]
+      properties:
+        id:             { type: string }
+        username:       { type: string }
+        role:           { type: string }
+        loginTimeStart: { type: ["string", "null"] }
+        loginTimeEnd:   { type: ["string", "null"] }
+        permissions:
+          type: array
+          items: { type: string }
+        createdAt:      { type: string }
+
+    StaffInput:
+      type: object
+      required: [username, password, role]
+      properties:
+        username:       { type: string }
+        password:       { type: string }
+        role:           { type: string }
+        loginTimeStart: { type: string }
+        loginTimeEnd:   { type: string }
+        permissions:
+          type: array
+          items: { type: string }
+
+    StaffUpdate:
+      type: object
+      properties:
+        username:       { type: string }
+        password:       { type: string }
+        role:           { type: string }
+        loginTimeStart: { type: string }
+        loginTimeEnd:   { type: string }
+        permissions:
+          type: array
+          items: { type: string }
+
+    # Analytics & Revenue
+    RevenueStats:
+      type: object
+      required: [total, today, thisWeek, thisMonth, thisYear]
+      properties:
+        total:           { type: number }
+        today:           { type: number }
+        thisWeek:        { type: number }
+        thisMonth:       { type: number }
+        thisYear:        { type: number }
+        previousDay:     { type: number }
+        previousWeek:    { type: number }
+        previousMonth:   { type: number }
+        previousYear:    { type: number }
+        ordersTotal:     { type: integer }
+        ordersToday:     { type: integer }
+        ordersThisWeek:  { type: integer }
+        ordersThisMonth: { type: integer }
+        ordersThisYear:  { type: integer }
+
+    ChartDataPoint:
+      type: object
+      required: [label, value]
+      properties:
+        label:   { type: string }
+        value:   { type: number }
+        orders:  { type: integer }
+
+    CategorySales:
+      type: object
+      required: [category, value]
+      properties:
+        category: { type: string }
+        value:    { type: number }
+        count:    { type: integer }
+
+    AnalyticsData:
+      type: object
+      required: [chartData, categorySales]
+      properties:
+        chartData:
+          type: array
+          items: { $ref: "#/components/schemas/ChartDataPoint" }
+        categorySales:
+          type: array
+          items: { $ref: "#/components/schemas/CategorySales" }
+        totalRevenue:  { type: number }
+        totalOrders:   { type: integer }
+        comparison:
+          type: object
+          properties:
+            revenueChange:  { type: number }
+            ordersChange:   { type: number }
+
+    DashboardStats:
+      type: object
+      required: [totalOrders, totalRevenue, todayOrders, todayRevenue, thisWeekOrders, thisWeekRevenue, thisMonthOrders, thisMonthRevenue, recentOrders, topGems]
+      properties:
+        totalOrders:       { type: integer }
+        totalRevenue:      { type: number }
+        todayOrders:       { type: integer }
+        todayRevenue:      { type: number }
+        thisWeekOrders:    { type: integer }
+        thisWeekRevenue:   { type: number }
+        thisMonthOrders:   { type: integer }
+        thisMonthRevenue:  { type: number }
+        thisYearOrders:    { type: integer }
+        thisYearRevenue:   { type: number }
+        recentOrders:
+          type: array
+          items: { $ref: "#/components/schemas/Order" }
+        topGems:
+          type: array
+          items: { $ref: "#/components/schemas/GemSalesSummary" }
+        chartData:
+          type: array
+          items: { $ref: "#/components/schemas/ChartDataPoint" }
+
+    # Payment
+    PayhereNotification:
+      type: object
+      required: [merchant_id, order_id, payment_id, payhere_amount, payhere_currency, status_code, md5sig]
+      properties:
+        merchant_id:      { type: string }
+        order_id:         { type: string }
+        payment_id:       { type: string }
+        payhere_amount:   { type: string }
+        payhere_currency: { type: string }
+        status_code:      { type: string }
+        md5sig:           { type: string }
+
+    PaymentInitInput:
+      type: object
+      required: [orderId, amount, currency, customerName, customerEmail, customerPhone]
+      properties:
+        orderId:         { type: string }
+        amount:          { type: number }
+        currency:        { type: string }
+        customerName:    { type: string }
+        customerEmail:   { type: string }
+        customerPhone:   { type: string }
+        itemName:        { type: string }
+
+    PaymentInitResponse:
+      type: object
+      required: [merchant_id, return_url, cancel_url, notify_url, order_id, items, currency, amount, first_name, last_name, email, phone, hash]
+      properties:
+        merchant_id:  { type: string }
+        return_url:   { type: string }
+        cancel_url:   { type: string }
+        notify_url:   { type: string }
+        order_id:     { type: string }
+        items:        { type: string }
+        currency:     { type: string }
+        amount:       { type: string }
+        first_name:   { type: string }
+        last_name:    { type: string }
+        email:        { type: string }
+        phone:        { type: string }
+        hash:         { type: string }
+
+    UploadResponse:
+      type: object
+      required: [urls]
+      properties:
+        urls:
+          type: array
+          items: { type: string }
