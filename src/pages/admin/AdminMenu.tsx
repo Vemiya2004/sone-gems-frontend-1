@@ -66,7 +66,7 @@ export default function AdminMenu() {
     queryKey: ["banners", "all"],
     queryFn: async () => {
       const token = getToken();
-      const baseUrl = import.meta.env.VITE_API_URL || "";
+      const baseUrl = import.meta.env.VITE_API_URL || "https://sone-gems-backend.onrender.com";
       const res = await fetch(`${baseUrl}/api/banners/all`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });

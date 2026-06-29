@@ -41,7 +41,7 @@ export default function AdminAppointments() {
     queryKey: ["appointments", search, statusTab, dateRange],
     queryFn: async () => {
       const token = localStorage.getItem("wg_token") || "";
-      const baseUrl = import.meta.env.VITE_API_URL || "";
+      const baseUrl = import.meta.env.VITE_API_URL || "https://sone-gems-backend.onrender.com";
       const params = new URLSearchParams();
       if (search) params.append("search", search);
       if (statusTab !== "all") params.append("status", statusTab);
@@ -62,7 +62,7 @@ export default function AdminAppointments() {
 
   const markReadMutation = useMutation({
     mutationFn: async (id: string) => {
-      const baseUrl = import.meta.env.VITE_API_URL || "";
+      const baseUrl = import.meta.env.VITE_API_URL || "https://sone-gems-backend.onrender.com";
       const token = localStorage.getItem("wg_token") || "";
       const res = await fetch(`${baseUrl}/api/orders/${id}/read`, { 
         method: "PATCH", 

@@ -3,8 +3,7 @@ import App from "./App";
 import "./index.css";
 import { setBaseUrl } from "./api-client/custom-fetch";
 
-if (import.meta.env.VITE_API_URL) {
-  setBaseUrl(import.meta.env.VITE_API_URL);
-}
+const baseUrl = import.meta.env.VITE_API_URL || "https://sone-gems-backend.onrender.com";
+setBaseUrl(baseUrl);
 
 createRoot(document.getElementById("root")!).render(<App />);

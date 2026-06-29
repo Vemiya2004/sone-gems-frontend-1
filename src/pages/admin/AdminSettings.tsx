@@ -10,6 +10,20 @@ import { useLocation } from "wouter";
 export default function AdminSettings() {
   const { logout } = useAuth();
   const [, setLocation] = useLocation();
+  const [isDarkMode, setIsDarkMode] = React.useState(() => {
+    return document.documentElement.classList.contains("dark");
+  });
+
+  const toggleDarkMode = (checked: boolean) => {
+    setIsDarkMode(checked);
+    if (checked) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -23,6 +37,21 @@ export default function AdminSettings() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
+        <Card className="bg-slate-900 border-slate-800">
+          <CardHeader>
+            <CardTitle className="text-slate-100">Appearance</CardTitle>
+            <CardDescription className="text-slate-400">Manage how the admin portal looks</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-slate-200">Dark Mode</Label>
+                <p className="text-sm text-slate-500">Toggle dark mode for the admin interface.</p>
+              </div>
+              <Switch checked={isDarkMode} onCheckedChange={toggleDarkMode} />
+            </div>
+          </CardContent>
+        </Card>
         <Card className="bg-slate-900 border-slate-800">
           <CardHeader>
             <CardTitle className="text-slate-100">Developer Contact</CardTitle>

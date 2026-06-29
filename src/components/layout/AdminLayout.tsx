@@ -33,7 +33,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { label: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },
-    { label: "Orders", path: "/admin/orders", icon: ShoppingBag, badge: unreadOrdersCount },
+    { label: "Orders", path: "/admin/orders", icon: ShoppingBag },
     { label: "Appointments", path: "/admin/appointments", icon: CalendarDays, badge: unreadAppointmentsCount },
     { label: "Revenue", path: "/admin/revenue", icon: BarChart3 },
     { label: "Analytics", path: "/admin/analytics", icon: PieChart },

@@ -41,10 +41,10 @@ export default function AdminOrders() {
     queryKey: ["orders", search, statusTab, dateRange],
     queryFn: async () => {
       const token = localStorage.getItem("wg_token") || "";
-      const baseUrl = import.meta.env.VITE_API_URL || "";
+      const baseUrl = import.meta.env.VITE_API_URL || "https://sone-gems-backend.onrender.com";
       const params = new URLSearchParams();
       if (search) params.append("search", search);
-      if (statusTab !== "all") params.append("status", statusTab);
+      // We fetch all orders and filter on the client to get badge counts for tabs
       if (dateRange?.from) params.append("startDate", dateRange.from.toISOString());
       if (dateRange?.to) params.append("endDate", dateRange.to.toISOString());
       
@@ -62,7 +62,7 @@ export default function AdminOrders() {
 
   const markReadMutation = useMutation({
     mutationFn: async (id: string) => {
-      const baseUrl = import.meta.env.VITE_API_URL || "";
+      const baseUrl = import.meta.env.VITE_API_URL || "https://sone-gems-backend.onrender.com";
       const token = localStorage.getItem("wg_token") || "";
       const res = await fetch(`${baseUrl}/api/orders/${id}/read`, { 
         method: "PATCH", 
@@ -127,14 +127,22 @@ export default function AdminOrders() {
 
       <Card className="bg-slate-900 border-slate-800">
         <CardContent className="p-0">
-          <div className="p-4 border-b border-slate-800">
+          <div className="p-4 border-b border-slate-800 overflow-x-auto">
             <Tabs value={statusTab} onValueChange={setStatusTab}>
-              <TabsList className="bg-slate-950 border border-slate-800">
-                {["all", "processing", "confirmed", "shipped", "delivered", "rejected"].map(s => (
-                  <TabsTrigger key={s} value={s} className="data-[state=active]:bg-slate-800 data-[state=active]:text-slate-100 capitalize">
-                    {s === "all" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}
-                  </TabsTrigger>
-                ))}
+              <TabsList className="bg-slate-950 border border-slate-800 h-auto p-1 flex-wrap md:flex-nowrap">
+                {["all", "processing", "confirmed", "shipped", "delivered", "rejected"].map(s => {
+                  const count = orders ? (s === "all" ? orders.filter((o:any) => o.pickupType !== "appointment").length : orders.filter((o:any) => o.status === s && o.pickupType !== "appointment").length) : 0;
+                  return (
+                    <TabsTrigger key={s} value={s} className="data-[state=active]:bg-slate-800 data-[state=active]:text-slate-100 capitalize flex items-center gap-2">
+                      {s === "all" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}
+                      {count > 0 && (
+                        <span className="bg-slate-800 text-slate-400 text-[10px] px-1.5 py-0.5 rounded-sm">
+                          {count}
+                        </span>
+                      )}
+                    </TabsTrigger>
+                  );
+                })}
               </TabsList>
             </Tabs>
           </div>
@@ -157,8 +165,8 @@ export default function AdminOrders() {
                   Array(5).fill(0).map((_, i) => (
                     <tr key={i}><td colSpan={7} className="px-6 py-4"><Skeleton className="h-10 bg-slate-800" /></td></tr>
                   ))
-                ) : orders && orders.filter(o => o.pickupType !== "appointment").length > 0 ? (
-                  orders.filter(o => o.pickupType !== "appointment").map(order => (
+                ) : orders && orders.filter((o:any) => o.pickupType !== "appointment" && (statusTab === "all" || o.status === statusTab)).length > 0 ? (
+                  orders.filter((o:any) => o.pickupType !== "appointment" && (statusTab === "all" || o.status === statusTab)).map((order:any) => (
                     <tr key={order.id} className={`hover:bg-slate-800/50 transition-colors cursor-pointer ${!order.isRead ? 'bg-slate-800/20' : ''}`} onClick={() => handleViewOrder(order)}>
                       <td className="px-6 py-4 relative">
                         {!order.isRead && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-blue-500" title="New unread order" />}

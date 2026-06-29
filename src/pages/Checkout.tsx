@@ -138,7 +138,7 @@ export default function Checkout() {
     try {
       toast({ title: "Initiating Payment...", description: "Connecting to PayHere secure gateway." });
       
-      const baseUrl = import.meta.env.VITE_API_URL || "";
+      const baseUrl = import.meta.env.VITE_API_URL || "https://sone-gems-backend.onrender.com";
       const res = await fetch(`${baseUrl}/api/payment/initiate`, {
         method: "POST",
         headers: {
