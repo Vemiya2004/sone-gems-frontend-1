@@ -138,7 +138,8 @@ export default function Checkout() {
     try {
       toast({ title: "Initiating Payment...", description: "Connecting to PayHere secure gateway." });
       
-      const res = await fetch("/api/payment/initiate", {
+      const baseUrl = import.meta.env.VITE_API_URL || "";
+      const res = await fetch(`${baseUrl}/api/payment/initiate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -30,6 +30,8 @@ jobs:
         env:
           PORT: 8081
           BASE_PATH: /
+          VITE_API_URL: https://sone-gems-backend.onrender.com
+          VITE_GOOGLE_CLIENT_ID: 897084071421-bjqcfud9uhs25upfjvn8sibhbc8j16n0.apps.googleusercontent.com
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
