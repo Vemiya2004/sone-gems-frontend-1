@@ -66,7 +66,8 @@ export default function AdminMenu() {
     queryKey: ["banners", "all"],
     queryFn: async () => {
       const token = getToken();
-      const res = await fetch("/api/banners/all", {
+      const baseUrl = import.meta.env.VITE_API_URL || "";
+      const res = await fetch(`${baseUrl}/api/banners/all`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!res.ok) return [];

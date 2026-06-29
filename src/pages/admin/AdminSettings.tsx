@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,7 @@ import { useLocation } from "wouter";
 export default function AdminSettings() {
   const { logout } = useAuth();
   const [, setLocation] = useLocation();
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   const handleLogout = () => {
     logout();
@@ -32,9 +33,9 @@ export default function AdminSettings() {
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-slate-200">Dark Mode</Label>
-                <p className="text-sm text-slate-500">Admin portal is permanently in dark mode to reduce eye strain.</p>
+                <p className="text-sm text-slate-500">Toggle dark mode for the admin interface.</p>
               </div>
-              <Switch checked disabled />
+              <Switch checked={isDarkMode} onCheckedChange={setIsDarkMode} />
             </div>
           </CardContent>
         </Card>
@@ -46,9 +47,13 @@ export default function AdminSettings() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="p-4 bg-slate-950 rounded-md border border-slate-800">
-              <div className="text-sm font-medium text-slate-200">Replit Agent</div>
+              <div className="text-sm font-medium text-slate-200">Sone Gems Tech Support</div>
               <div className="text-sm text-slate-500 mt-1">v1.0.0 (Latest)</div>
-              <div className="text-xs text-slate-600 mt-4">For system issues, please reach out to the development team.</div>
+              <div className="text-sm text-slate-300 mt-4">
+                contact කරගන්න අවශ්‍යයි නම් මේ email එකට message එකක් දාන්න: 
+                <br/>
+                <a href="mailto:sonezbusiness@gmail.com" className="text-amber-500 hover:underline">sonezbusiness@gmail.com</a>
+              </div>
             </div>
           </CardContent>
         </Card>

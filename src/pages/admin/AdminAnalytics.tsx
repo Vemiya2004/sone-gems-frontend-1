@@ -1,34 +1,53 @@
 import React, { useState } from "react";
-import { useGetAnalytics } from "@/api-client";
+import { useQuery } from "@tanstack/react-query";
+import { DateRange } from "react-day-picker";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { formatCurrency } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 
 export default function AdminAnalytics() {
   const [period, setPeriod] = useState<"today" | "week" | "month" | "year">("month");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   
-  const { data, isLoading } = useGetAnalytics({ period });
+  const { data, isLoading } = useQuery({
+    queryKey: ["analytics", period, dateRange],
+    queryFn: async () => {
+      const token = localStorage.getItem("wg_token") || "";
+      const baseUrl = import.meta.env.VITE_API_URL || "";
+      let url = `${baseUrl}/api/analytics?period=${period}`;
+      if (dateRange?.from && dateRange?.to) {
+        url += `&startDate=${dateRange.from.toISOString()}&endDate=${dateRange.to.toISOString()}`;
+      }
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) throw new Error("Failed to load analytics");
+      return res.json();
+    }
+  });
 
   const COLORS = ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ef4444', '#64748b'];
 
   return (
     <AdminLayout>
-      <div className="mb-8 flex justify-between items-center">
+      <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-2xl font-bold text-slate-100">Analytics</h1>
-        <Select value={period} onValueChange={(val: any) => setPeriod(val)}>
-          <SelectTrigger className="w-[180px] bg-slate-900 border-slate-800 text-slate-200">
-            <SelectValue placeholder="Select period" />
-          </SelectTrigger>
-          <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
-            <SelectItem value="today">Today</SelectItem>
-            <SelectItem value="week">This Week</SelectItem>
-            <SelectItem value="month">This Month</SelectItem>
-            <SelectItem value="year">This Year</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-4">
+          <Select value={period} onValueChange={(val: any) => { setPeriod(val); setDateRange(undefined); }}>
+            <SelectTrigger className="w-[180px] bg-slate-900 border-slate-800 text-slate-200">
+              <SelectValue placeholder="Select period" />
+            </SelectTrigger>
+            <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="week">This Week</SelectItem>
+              <SelectItem value="month">This Month</SelectItem>
+              <SelectItem value="year">This Year</SelectItem>
+            </SelectContent>
+          </Select>
+          <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+        </div>
       </div>
 
       {isLoading ? (
@@ -100,29 +119,33 @@ export default function AdminAnalytics() {
               </CardHeader>
               <CardContent>
                 <div className="h-[350px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={data.categorySales}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={80}
-                        outerRadius={120}
-                        paddingAngle={2}
-                        dataKey="value"
-                        nameKey="category"
-                      >
-                        {data.categorySales.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', color: '#f8fafc' }}
-                        formatter={(value: number) => [formatCurrency(value), 'Sales']}
-                      />
-                      <Legend verticalAlign="bottom" height={36} iconType="circle" />
-                    </PieChart>
-                  </ResponsiveContainer>
+                  {data.categorySales && data.categorySales.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={data.categorySales}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={80}
+                          outerRadius={120}
+                          paddingAngle={2}
+                          dataKey="value"
+                          nameKey="category"
+                        >
+                          {data.categorySales.map((entry: any, index: number) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', color: '#f8fafc' }}
+                          formatter={(value: number) => [formatCurrency(value), 'Sales']}
+                        />
+                        <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-slate-500">No category sales data</div>
+                  )}
                 </div>
               </CardContent>
             </Card>

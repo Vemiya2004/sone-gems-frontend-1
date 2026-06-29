@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { useListOrders, useMarkOrderPaid, useUpdateOrder } from "@/api-client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMarkOrderPaid, useUpdateOrder } from "@/api-client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { DateRange } from "react-day-picker";
 import { formatCurrency, formatDateTime } from "@/lib/formatters";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, CheckCircle, Clock, Package, MapPin, CreditCard, Truck, Store, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 
 function PaymentMethodIcon({ method }: { method: string }) {
   if (method === "pay_on_delivery") return <Truck className="h-4 w-4" />;
@@ -32,11 +34,26 @@ export default function AdminOrders() {
   const [search, setSearch] = useState("");
   const [statusTab, setStatusTab] = useState("all");
   const [viewOrder, setViewOrder] = useState<any>(null);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const { toast } = useToast();
 
-  const { data: orders, isLoading, refetch } = useListOrders({
-    search: search || undefined,
-    status: statusTab !== "all" ? statusTab : undefined
+  const { data: orders, isLoading, refetch } = useQuery({
+    queryKey: ["orders", search, statusTab, dateRange],
+    queryFn: async () => {
+      const token = localStorage.getItem("wg_token") || "";
+      const baseUrl = import.meta.env.VITE_API_URL || "";
+      const params = new URLSearchParams();
+      if (search) params.append("search", search);
+      if (statusTab !== "all") params.append("status", statusTab);
+      if (dateRange?.from) params.append("startDate", dateRange.from.toISOString());
+      if (dateRange?.to) params.append("endDate", dateRange.to.toISOString());
+      
+      const res = await fetch(`${baseUrl}/api/orders?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Failed to load orders");
+      return res.json();
+    }
   });
 
   const markPaidMutation = useMarkOrderPaid();
@@ -45,7 +62,12 @@ export default function AdminOrders() {
 
   const markReadMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/orders/${id}/read`, { method: "PATCH", headers: { "Content-Type": "application/json" } });
+      const baseUrl = import.meta.env.VITE_API_URL || "";
+      const token = localStorage.getItem("wg_token") || "";
+      const res = await fetch(`${baseUrl}/api/orders/${id}/read`, { 
+        method: "PATCH", 
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } 
+      });
       if (!res.ok) throw new Error("Failed to mark read");
       return res.json();
     },
@@ -89,15 +111,18 @@ export default function AdminOrders() {
     <AdminLayout>
       <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-2xl font-bold text-slate-100">Orders Management</h1>
-        <form onSubmit={e => { e.preventDefault(); refetch(); }} className="relative w-full md:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-          <Input
-            placeholder="Search Order ID..."
-            className="pl-9 bg-slate-900 border-slate-800 text-slate-200"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-        </form>
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+          <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+          <form onSubmit={e => { e.preventDefault(); refetch(); }} className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+            <Input
+              placeholder="Search Order ID..."
+              className="pl-9 bg-slate-900 border-slate-800 text-slate-200"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </form>
+        </div>
       </div>
 
       <Card className="bg-slate-900 border-slate-800">

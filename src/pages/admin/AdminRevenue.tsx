@@ -1,32 +1,72 @@
 import React, { useState } from "react";
-import { useGetRevenue } from "@/api-client";
+import { useQuery } from "@tanstack/react-query";
+import { DateRange } from "react-day-picker";
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DollarSign, TrendingUp, TrendingDown, ArrowRight } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, Calendar as CalendarIcon } from "lucide-react";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 
 export default function AdminRevenue() {
   const [period, setPeriod] = useState<"today" | "week" | "month" | "year">("month");
-  const { data: revenue, isLoading } = useGetRevenue({ period });
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+
+  const { data: revenue, isLoading } = useQuery({
+    queryKey: ["revenue", period, dateRange],
+    queryFn: async () => {
+      const token = localStorage.getItem("wg_token") || "";
+      const baseUrl = import.meta.env.VITE_API_URL || "";
+      let url = `${baseUrl}/api/analytics/revenue?period=${period}`;
+      if (dateRange?.from && dateRange?.to) {
+        url += `&startDate=${dateRange.from.toISOString()}&endDate=${dateRange.to.toISOString()}`;
+      }
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) throw new Error("Failed to load revenue stats");
+      return res.json();
+    }
+  });
 
   return (
     <AdminLayout>
-      <div className="mb-8 flex justify-between items-center">
+      <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-2xl font-bold text-slate-100">Revenue Management</h1>
-        <Select value={period} onValueChange={(val: any) => setPeriod(val)}>
-          <SelectTrigger className="w-[180px] bg-slate-900 border-slate-800 text-slate-200">
-            <SelectValue placeholder="Select period" />
-          </SelectTrigger>
-          <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
-            <SelectItem value="today">Today</SelectItem>
-            <SelectItem value="week">This Week</SelectItem>
-            <SelectItem value="month">This Month</SelectItem>
-            <SelectItem value="year">This Year</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-4">
+          <Select value={period} onValueChange={(val: any) => { setPeriod(val); setDateRange(undefined); }}>
+            <SelectTrigger className="w-[180px] bg-slate-900 border-slate-800 text-slate-200">
+              <SelectValue placeholder="Select period" />
+            </SelectTrigger>
+            <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="week">This Week</SelectItem>
+              <SelectItem value="month">This Month</SelectItem>
+              <SelectItem value="year">This Year</SelectItem>
+            </SelectContent>
+          </Select>
+          <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+        </div>
       </div>
+
+      {dateRange?.from && dateRange?.to && revenue?.customRangeRevenue !== undefined && (
+        <Card className="bg-amber-500/10 border-amber-500/20 mb-6">
+          <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                <CalendarIcon className="h-6 w-6 text-amber-500" />
+              </div>
+              <div>
+                <h3 className="text-amber-500/80 text-sm font-medium">Selected Period Revenue</h3>
+                <div className="text-2xl font-bold text-amber-500 mt-1">{formatCurrency(revenue.customRangeRevenue)}</div>
+              </div>
+            </div>
+            <div className="text-right">
+              <h3 className="text-amber-500/80 text-sm font-medium">Selected Period Orders</h3>
+              <div className="text-2xl font-bold text-amber-500 mt-1">{revenue.customRangeOrders || 0}</div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
