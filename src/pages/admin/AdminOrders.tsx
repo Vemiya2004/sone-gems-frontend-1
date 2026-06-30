@@ -131,7 +131,8 @@ export default function AdminOrders() {
             <Tabs value={statusTab} onValueChange={setStatusTab}>
               <TabsList className="bg-slate-950 border border-slate-800 h-auto p-1 flex-wrap md:flex-nowrap">
                 {["all", "processing", "confirmed", "shipped", "delivered", "rejected"].map(s => {
-                  const count = orders ? (s === "all" ? orders.filter((o:any) => o.pickupType !== "appointment").length : orders.filter((o:any) => o.status === s && o.pickupType !== "appointment").length) : 0;
+                  const visibleOrders = orders ? orders.filter((o:any) => !(o.paymentMethod === "card" && !o.isPaid)) : [];
+                  const count = visibleOrders ? (s === "all" ? visibleOrders.filter((o:any) => o.pickupType !== "appointment").length : visibleOrders.filter((o:any) => o.status === s && o.pickupType !== "appointment").length) : 0;
                   return (
                     <TabsTrigger key={s} value={s} className="data-[state=active]:bg-slate-800 data-[state=active]:text-slate-100 capitalize flex items-center gap-2">
                       {s === "all" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}
@@ -165,8 +166,8 @@ export default function AdminOrders() {
                   Array(5).fill(0).map((_, i) => (
                     <tr key={i}><td colSpan={7} className="px-6 py-4"><Skeleton className="h-10 bg-slate-800" /></td></tr>
                   ))
-                ) : orders && orders.filter((o:any) => o.pickupType !== "appointment" && (statusTab === "all" || o.status === statusTab)).length > 0 ? (
-                  orders.filter((o:any) => o.pickupType !== "appointment" && (statusTab === "all" || o.status === statusTab)).map((order:any) => (
+                ) : orders && orders.filter((o:any) => !(o.paymentMethod === "card" && !o.isPaid) && o.pickupType !== "appointment" && (statusTab === "all" || o.status === statusTab)).length > 0 ? (
+                  orders.filter((o:any) => !(o.paymentMethod === "card" && !o.isPaid) && o.pickupType !== "appointment" && (statusTab === "all" || o.status === statusTab)).map((order:any) => (
                     <tr key={order.id} className={`hover:bg-slate-800/50 transition-colors cursor-pointer ${!order.isRead ? 'bg-slate-800/20' : ''}`} onClick={() => handleViewOrder(order)}>
                       <td className="px-6 py-4 relative">
                         {!order.isRead && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-blue-500" title="New unread order" />}
