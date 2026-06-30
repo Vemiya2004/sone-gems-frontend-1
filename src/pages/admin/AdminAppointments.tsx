@@ -96,7 +96,7 @@ export default function AdminAppointments() {
   };
 
   const handleStatusChange = (id: string, status: string) => {
-    updateOrderMutation.mutate({ id, data: { status } }, {
+    updateOrderMutation.mutate({ id, data: { status: status as any } }, {
       onSuccess: (updated) => {
         toast({ title: "Status updated" });
         refetch();

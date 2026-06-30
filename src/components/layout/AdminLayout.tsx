@@ -23,8 +23,8 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const { data: orders } = useListOrders();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const unreadOrdersCount = orders?.filter(o => !o.isRead && o.pickupType !== "appointment").length || 0;
-  const unreadAppointmentsCount = orders?.filter(o => !o.isRead && o.pickupType === "appointment").length || 0;
+  const unreadOrdersCount = orders?.filter((o:any) => !o.isRead && o.pickupType !== "appointment").length || 0;
+  const unreadAppointmentsCount = orders?.filter((o:any) => !o.isRead && o.pickupType === "appointment").length || 0;
 
   const handleLogout = () => {
     logout();

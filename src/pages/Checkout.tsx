@@ -113,8 +113,8 @@ export default function Checkout() {
       data: {
         items,
         shippingDetails,
-        paymentMethod,
-        pickupType,
+        paymentMethod: paymentMethod as any,
+        pickupType: pickupType as any,
         total: finalTotal,
         shippingCost: flow === "delivery" ? shippingCost : 0,
       }
