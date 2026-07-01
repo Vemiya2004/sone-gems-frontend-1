@@ -164,15 +164,39 @@ export default function Checkout() {
         throw new Error("PayHere is not loaded. Please check your internet connection or disable adblockers.");
       }
 
-      (window as any).payhere.onCompleted = function onCompleted(orderId: string) {
-        toast({ title: "Payment Successful", description: `Order ${orderId} has been paid.` });
-        clearCart();
-        setSuccessOrder(order);
-        setStep(99);
+      (window as any).payhere.onCompleted = async function onCompleted(payhereOrderId: string) {
+        toast({ title: "Verifying Payment...", description: "Please wait while we confirm your payment." });
+        
+        let attempts = 0;
+        const checkPayment = async () => {
+          try {
+            const res = await fetch(`${baseUrl}/api/orders/${order.id}`, {
+              headers: { "Authorization": `Bearer ${localStorage.getItem("wg_token")}` }
+            });
+            const dbOrder = await res.json();
+            if (dbOrder.isPaid) {
+              toast({ title: "Payment Successful", description: `Order ${payhereOrderId} has been paid.` });
+              clearCart();
+              setSuccessOrder(order);
+              setStep(99);
+            } else if (attempts < 5) {
+              attempts++;
+              setTimeout(checkPayment, 2000);
+            } else {
+              toast({ title: "Payment Failed", description: "Payment was not confirmed by the gateway. Please try again.", variant: "destructive" });
+              setLocation("/cart");
+            }
+          } catch (e) {
+            toast({ title: "Error", description: "Could not verify payment status.", variant: "destructive" });
+            setLocation("/cart");
+          }
+        };
+        checkPayment();
       };
 
       (window as any).payhere.onDismissed = function onDismissed() {
-        toast({ title: "Payment Dismissed", description: "You closed the payment popup." });
+        toast({ title: "Payment Dismissed", description: "You closed the payment popup.", variant: "destructive" });
+        setLocation("/cart");
       };
 
       (window as any).payhere.onError = function onError(error: string) {
