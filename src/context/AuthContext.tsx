@@ -5,6 +5,7 @@ import { setAuthTokenGetter } from "@/api-client";
 interface AuthContextType {
   user: User | null;
   token: string | null;
+  permissions: string[];
   login: (token: string, user: User) => void;
   logout: () => void;
   isAdmin: boolean;
@@ -19,9 +20,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const saved = localStorage.getItem("wg_user");
     return saved ? JSON.parse(saved) : null;
   });
-  
+
   const [token, setToken] = useState<string | null>(() => {
     return localStorage.getItem("wg_token");
+  });
+
+  const [permissions, setPermissions] = useState<string[]>(() => {
+    const saved = localStorage.getItem("wg_permissions");
+    return saved ? JSON.parse(saved) : [];
   });
 
   useEffect(() => {
@@ -31,15 +37,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = (newToken: string, newUser: User) => {
     setToken(newToken);
     setUser(newUser);
+    const perms = (newUser as any)?.permissions || [];
+    setPermissions(perms);
     localStorage.setItem("wg_token", newToken);
     localStorage.setItem("wg_user", JSON.stringify(newUser));
+    localStorage.setItem("wg_permissions", JSON.stringify(perms));
   };
 
   const logout = () => {
     setToken(null);
     setUser(null);
+    setPermissions([]);
     localStorage.removeItem("wg_token");
     localStorage.removeItem("wg_user");
+    localStorage.removeItem("wg_permissions");
   };
 
   return (
@@ -47,6 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         token,
+        permissions,
         login,
         logout,
         isAdmin: user?.role === UserRole.admin,
@@ -66,6 +78,3 @@ export function useAuth() {
   }
   return context;
 }
-
-
-
