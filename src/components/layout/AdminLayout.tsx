@@ -16,6 +16,18 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { ADMIN_NAV_CONFIG } from "@/lib/adminNav";
+
+const ICONS: Record<string, any> = {
+  "/admin/dashboard": LayoutDashboard,
+  "/admin/orders": ShoppingBag,
+  "/admin/appointments": CalendarDays,
+  "/admin/revenue": BarChart3,
+  "/admin/analytics": PieChart,
+  "/admin/staff": Users,
+  "/admin/menu": MenuSquare,
+  "/admin/settings": Settings,
+};
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
@@ -25,29 +37,20 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
   const isAdmin = user?.role === "admin";
 
-  const unreadOrdersCount = orders?.filter((o:any) => !o.isRead && o.pickupType !== "appointment").length || 0;
   const unreadAppointmentsCount = orders?.filter((o:any) => !o.isRead && o.pickupType === "appointment").length || 0;
+
+  const badgeMap: Record<string, number> = {
+    "/admin/appointments": unreadAppointmentsCount,
+  };
 
   const handleLogout = () => {
     logout();
     setLocation("/admin");
   };
 
-  const navItems = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard, permission: "dashboard" },
-    { label: "Orders", path: "/admin/orders", icon: ShoppingBag, permission: "orders" },
-    { label: "Appointments", path: "/admin/appointments", icon: CalendarDays, badge: unreadAppointmentsCount, permission: "orders" },
-    { label: "Revenue", path: "/admin/revenue", icon: BarChart3, permission: "revenue" },
-    { label: "Analytics", path: "/admin/analytics", icon: PieChart, permission: "analytics" },
-    { label: "Staff", path: "/admin/staff", icon: Users, permission: "staff" },
-    { label: "Menu & Catalog", path: "/admin/menu", icon: MenuSquare, permission: "menu" },
-    { label: "Settings", path: "/admin/settings", icon: Settings, permission: "settings" },
-  ];
-
-  // admin කෙනෙක්ට හැම item එකක්ම පේනවා. staff කෙනෙක්ට එයාට දීලා තියෙන permission තියෙන items විතරයි.
   const visibleNavItems = isAdmin
-    ? navItems
-    : navItems.filter((item) => permissions.includes(item.permission));
+    ? ADMIN_NAV_CONFIG
+    : ADMIN_NAV_CONFIG.filter((item) => permissions.includes(item.permission));
 
   const SidebarContent = () => (
     <>
@@ -71,8 +74,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
         {visibleNavItems.map((item) => {
-          const Icon = item.icon;
+          const Icon = ICONS[item.path] || LayoutDashboard;
           const isActive = location === item.path || location.startsWith(item.path + "/");
+          const badge = badgeMap[item.path] || 0;
           return (
             <Link key={item.path} href={item.path} onClick={() => setIsMobileMenuOpen(false)}>
               <span className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sm font-medium ${
@@ -82,9 +86,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               }`}>
                 <Icon className="h-5 w-5" />
                 {item.label}
-                {!!item.badge && item.badge > 0 && (
+                {badge > 0 && (
                   <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                    {item.badge}
+                    {badge}
                   </span>
                 )}
               </span>
@@ -108,12 +112,10 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50 flex">
-      {/* Desktop Sidebar */}
       <aside className="w-64 bg-slate-900 border-r border-slate-800 hidden md:flex flex-col fixed inset-y-0">
         <SidebarContent />
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 md:ml-64 min-h-screen flex flex-col min-w-0">
         <header className="h-20 bg-slate-900/50 backdrop-blur border-b border-slate-800 sticky top-0 z-30 px-4 md:px-8 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-4">
