@@ -8,11 +8,10 @@ import { CartProvider } from "@/context/CartContext";
 import { SettingsProvider } from "@/context/SettingsContext";
 import { queryClient } from "@/lib/queryClient";
 
-// Layout components
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { ProtectedAdminRoute } from "@/components/auth/ProtectedAdminRoute";
 
-// Pages
 import Home from "@/pages/Home";
 import GemsList from "@/pages/GemsList";
 import GemDetail from "@/pages/GemDetail";
@@ -23,7 +22,6 @@ import Profile from "@/pages/Profile";
 import ProfileOrders from "@/pages/ProfileOrders";
 import ProfileOrderDetail from "@/pages/ProfileOrderDetail";
 
-// Admin Pages
 import AdminLogin from "@/pages/admin/AdminLogin";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminOrders from "@/pages/admin/AdminOrders";
@@ -53,17 +51,33 @@ function Router() {
     <Switch>
       {/* Admin Routes (No store layout) */}
       <Route path="/admin" component={AdminLogin} />
-      <Route path="/admin/dashboard" component={AdminDashboard} />
-      <Route path="/admin/orders" component={AdminOrders} />
-      <Route path="/admin/analytics" component={AdminAnalytics} />
-      <Route path="/admin/appointments" component={AdminAppointments} />
-      <Route path="/admin/revenue" component={AdminRevenue} />
-      <Route path="/admin/staff" component={AdminStaff} />
-      <Route path="/admin/menu" component={AdminMenu} />
-      <Route path="/admin/settings" component={AdminSettings} />
-      {/* Fallback for other admin routes to dashboard for now */}
+      <Route path="/admin/dashboard">
+        {() => <ProtectedAdminRoute permission="dashboard"><AdminDashboard /></ProtectedAdminRoute>}
+      </Route>
+      <Route path="/admin/orders">
+        {() => <ProtectedAdminRoute permission="orders"><AdminOrders /></ProtectedAdminRoute>}
+      </Route>
+      <Route path="/admin/analytics">
+        {() => <ProtectedAdminRoute permission="analytics"><AdminAnalytics /></ProtectedAdminRoute>}
+      </Route>
+      <Route path="/admin/appointments">
+        {() => <ProtectedAdminRoute permission="orders"><AdminAppointments /></ProtectedAdminRoute>}
+      </Route>
+      <Route path="/admin/revenue">
+        {() => <ProtectedAdminRoute permission="revenue"><AdminRevenue /></ProtectedAdminRoute>}
+      </Route>
+      <Route path="/admin/staff">
+        {() => <ProtectedAdminRoute permission="staff"><AdminStaff /></ProtectedAdminRoute>}
+      </Route>
+      <Route path="/admin/menu">
+        {() => <ProtectedAdminRoute permission="menu"><AdminMenu /></ProtectedAdminRoute>}
+      </Route>
+      <Route path="/admin/settings">
+        {() => <ProtectedAdminRoute permission="settings"><AdminSettings /></ProtectedAdminRoute>}
+      </Route>
+      {/* Fallback for other admin routes */}
       <Route path="/admin/:rest*">
-        {() => <AdminDashboard />}
+        {() => <ProtectedAdminRoute permission="dashboard"><AdminDashboard /></ProtectedAdminRoute>}
       </Route>
 
       {/* Store Routes */}
@@ -95,7 +109,6 @@ function Router() {
         <StoreLayout><ProfileOrderDetail /></StoreLayout>
       </Route>
 
-      {/* Catch-all */}
       <Route>
         <StoreLayout><NotFound /></StoreLayout>
       </Route>
