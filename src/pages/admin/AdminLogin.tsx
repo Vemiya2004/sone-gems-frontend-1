@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Lock } from "lucide-react";
+import { getFirstAllowedAdminPath } from "@/lib/adminNav";
 
 export default function AdminLogin() {
   const [location, setLocation] = useLocation();
@@ -26,7 +27,9 @@ export default function AdminLogin() {
       onSuccess: (res) => {
         setAuth(res.token, res.user);
         toast({ title: "Login successful", description: "Welcome to the admin panel." });
-        setLocation("/admin/dashboard");
+        const isAdminUser = res.user.role === "admin";
+        const perms = (res.user as any)?.permissions || [];
+        setLocation(getFirstAllowedAdminPath(isAdminUser, perms));
       },
       onError: (err) => {
         toast({ title: "Access Denied", description: err.message || "Invalid credentials", variant: "destructive" });
