@@ -56,7 +56,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     <>
       <div className="h-20 flex items-center px-6 border-b border-slate-800 shrink-0">
         <Link href="/admin/dashboard" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
-          <span className="font-serif text-xl font-bold tracking-tight text-amber-500">WG Admin</span>
+          <span className="font-serif text-xl font-bold tracking-tight text-amber-500">Head Admin</span>
         </Link>
       </div>
       
