@@ -293,7 +293,43 @@ export default function AdminOrders() {
                             <p>{sd.address}{sd.addressLine2 && `, ${sd.addressLine2}`}</p>
                             <p>{sd.city}, {sd.postalCode}</p>
                             {sd.locationText && <p className="text-xs italic mt-1">{sd.locationText}</p>}
-                            {sd.locationLat && <p className="text-xs font-mono mt-1">📍 {sd.locationLat}, {sd.locationLng}</p>}
+                            {sd.locationLat && sd.locationLng && (
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                <Button asChild size="sm" variant="outline" className="border-slate-700 text-slate-300 h-8">
+                                  <a
+                                    href={`https://www.google.com/maps/dir/?api=1&destination=${sd.locationLat},${sd.locationLng}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                  >
+                                    <MapPin className="h-3.5 w-3.5 mr-1" /> Open in Maps
+                                  </a>
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="border-slate-700 text-slate-300 h-8"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(
+                                      `https://www.google.com/maps/dir/?api=1&destination=${sd.locationLat},${sd.locationLng}`
+                                    );
+                                    toast({ title: "Map link copied" });
+                                  }}
+                                >
+                                  Copy link
+                                </Button>
+                              </div>
+                            )}
+                            {!sd.locationLat && sd.address && (
+                              <Button asChild size="sm" variant="outline" className="border-slate-700 text-slate-300 h-8 mt-2">
+                                <a
+                                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${sd.address}, ${sd.city || ""}`)}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  <MapPin className="h-3.5 w-3.5 mr-1" /> Search address in Maps
+                                </a>
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </div>
