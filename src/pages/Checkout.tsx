@@ -218,18 +218,35 @@ export default function Checkout() {
     setIsLocating(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setDetails(d => ({
-          ...d,
-          locationLat: position.coords.latitude.toString(),
-          locationLng: position.coords.longitude.toString()
+        const { latitude, longitude, accuracy } = position.coords;
+          setDetails(d => ({
+            ...d,
+            locationLat: latitude.toFixed(6),
+            locationLng: longitude.toFixed(6),
         }));
         setIsLocating(false);
-        toast({ title: "Success", description: "Location updated successfully." });
+
+        if (accuracy > 500) {
+          toast({
+            title: "Location may be inaccurate",
+            description: `Accuracy is about ${Math.round(accuracy)} m. Please use your phone for a better result, or edit the coordinates manually.`,
+            variant: "destructive",
+          });
+        } else {
+          toast({ title: "Success", description: `Location updated (±${Math.round(accuracy)} m).` });
+        }
       },
       (error) => {
         setIsLocating(false);
-        toast({ title: "Error", description: "Failed to get location. Please allow location access.", variant: "destructive" });
-      }
+        const msg =
+          error.code === error.PERMISSION_DENIED
+            ? "Location permission was denied. Please allow it in your browser settings."
+            : error.code === error.TIMEOUT
+            ? "Location request timed out. Please try again."
+            : "Could not determine your location.";
+        toast({ title: "Error", description: msg, variant: "destructive" });
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   };
 
