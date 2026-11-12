@@ -18,7 +18,7 @@ export default function AdminRevenue() {
     queryFn: async () => {
       const token = localStorage.getItem("wg_token") || "";
       const baseUrl = import.meta.env.VITE_API_URL || "https://sone-gems-backend.onrender.com";
-      let url = `${baseUrl}/api/analytics/revenue?period=${period}`;
+      let url = `${baseUrl}/api/revenue?period=${period}`;
       if (dateRange?.from && dateRange?.to) {
         url += `&startDate=${dateRange.from.toISOString()}&endDate=${dateRange.to.toISOString()}`;
       }
